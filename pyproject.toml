@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "peekaboo-wf"
+version = "0.1.0"
+description = "HTTPS website fingerprinting and traffic privacy defense research prototype"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+research = ["selenium>=4,<5", "numpy>=1.26,<3", "pandas>=2,<3", "scikit-learn>=1.4,<2", "streamlit>=1.35,<2"]
+
+[project.scripts]
+peekaboo = "peekaboo.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

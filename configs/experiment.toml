@@ -1,0 +1,15 @@
+# Populate sites.csv and record browser/cache settings before collecting.
+[collection]
+sites_file = "configs/sites.csv"
+visits_per_site = 40
+capture_seconds = 30
+pause_between_visits_seconds = 10
+seed = 42
+
+[evaluation]
+split_unit = "session"
+hold_out_later_sessions = true
+
+[defense]
+mode = "simulation"
+# Delay settings will be selected by a pilot, not assumed effective.
