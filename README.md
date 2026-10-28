@@ -7,9 +7,12 @@ directions, and timing, then evaluate a timing-jitter defense.
 
 ## Current status
 
-Initialized project scaffold. The CLI environment check works; collection,
-feature extraction, classifier training, jitter experiments, and dashboard are
-not implemented yet. No results or accuracy claims are available.
+The CLI environment check and a controlled HTTPS collection pipeline are implemented.
+The local pilot has not yet produced validated traces: Chrome startup from the agent
+session encountered Windows access restrictions. Run the pilot from normal PowerShell
+using `./scripts/collect-pilot.ps1`. See [dataset collection](docs/dataset.md) for the
+proxy observation scope and acceptance checks. Feature extraction, training, jitter,
+and the dashboard are not implemented yet. No accuracy claims are available.
 
 ## Setup
 
