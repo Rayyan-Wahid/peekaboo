@@ -2,6 +2,15 @@
 
 ## Screening decisions
 
+Apache replaces National Geographic in the active 20-site manifest after all three
+Apache screening visits returned HTTP 200 and showed the expected homepage.
+National Geographic failed all five visits in batch two. Keep its historical
+captures under the original label and exclude them from the final active-site
+dataset. Apache screening traces remain pilot data; do not backdate replacement
+visits into the first two batches. Collect Apache across future independent
+sessions until it reaches the same accepted-sample target as the other sites.
+Early batches lacking Apache must not be used alone as a 20-class test set.
+
 GNU was removed from the active site list after three observed visits produced
 Chrome `ERR_EMPTY_RESPONSE` pages with navigation response status 0. Its historical
 captures and labels remain unchanged and excluded. Rust is the replacement
