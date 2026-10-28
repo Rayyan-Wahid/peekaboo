@@ -1,4 +1,5 @@
-param([int]$Visits = 2, [int]$Seconds = 20, [int]$Limit = 3)
+param([int]$Visits = 2, [int]$Seconds = 20, [int]$Limit = 3,
+      [string]$Sites = 'configs/sites.csv')
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Push-Location $repoRoot
@@ -11,12 +12,13 @@ try {
     $env:SE_CACHE_PATH = Join-Path $repoRoot '.cache/selenium'
     $env:SE_AVOID_STATS = 'true'
     & $pythonPath -m peekaboo doctor
-    & $pythonPath -m peekaboo collect --limit $Limit --visits $Visits --seconds $Seconds --pause 10
+    & $pythonPath -m peekaboo collect --sites $Sites --limit $Limit --visits $Visits --seconds $Seconds --pause 10
     $collectionExit = $LASTEXITCODE
     if ($collectionExit -ne 0) {
-        throw 'Pilot incomplete: review the latest data/raw session manifest and logs.'
+        Write-Warning 'Some visits failed or need review. Saved captures are retained; inspect the latest session manifest and logs.'
+    } else {
+        Write-Host 'Pilot finished. Review screenshots before accepting any candidate trace.'
     }
-    Write-Host 'Pilot finished. Review screenshots before accepting any candidate trace.'
 } finally {
     Pop-Location
 }

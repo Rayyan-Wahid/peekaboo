@@ -90,6 +90,26 @@ def sites_from(path):
     return sites
 
 
+def review_reasons(record):
+    """Conservative checks; candidates still need screenshot review."""
+    reasons = []
+    status = record.get('navigation', {}).get('responseStatus', 0)
+    if not isinstance(status, (int, float)) or not 200 <= status < 300:
+        reasons.append('missing_or_unsuccessful_http_response')
+    if record.get('tls_frames', 0) < 5:
+        reasons.append('insufficient_tls_frames')
+    if record.get('body_chars', 0) < 50:
+        reasons.append('insufficient_page_text')
+    if record.get('browser_error_page', False):
+        reasons.append('browser_error_page')
+    if not record.get('final_url', '').startswith('https://'):
+        reasons.append('non_https_destination')
+    if any(x in record.get('title', '').lower() for x in
+           ['just a moment', 'access denied', 'captcha', 'privacy error']):
+        reasons.append('possible_challenge_page')
+    return reasons
+
+
 def collect(args):
     from selenium import webdriver
     from selenium.common.exceptions import SessionNotCreatedException, NoSuchDriverException
@@ -161,7 +181,22 @@ def collect(args):
                 record['final_url'] = driver.current_url
                 record['title'] = driver.title
                 record['ready_state'] = driver.execute_script('return document.readyState')
-                record['body_chars'] = driver.execute_script('return document.body ? document.body.innerText.length : 0')
+                record['body_chars'] = driver.execute_script('''
+                    function read(root) {
+                        let result = root.innerText || '';
+                        for (const el of root.querySelectorAll('*')) {
+                            if (el.shadowRoot) result += read(el.shadowRoot);
+                        }
+                        if (root instanceof ShadowRoot) {
+                            result += Array.from(root.childNodes)
+                                .map(n => n.innerText || (n.nodeType === 3 ? n.textContent : '')).join(' ');
+                        }
+                        return result;
+                    }
+                    return document.body ? read(document.body).length : 0;
+                ''')
+                record['browser_error_page'] = driver.execute_script(
+                    'return !!document.querySelector("#main-frame-error, #interstitial-wrapper")')
                 record['navigation'] = driver.execute_script('return performance.getEntriesByType("navigation")[0]?.toJSON() || {}')
                 process.wait(timeout=10)
                 if process.returncode:
@@ -170,12 +205,8 @@ def collect(args):
                     '-T', 'fields', '-e', 'frame.number'], text=True, timeout=30)
                 record['tls_frames'] = len(tls.splitlines())
                 record['sha256'] = hashlib.sha256(capture.read_bytes()).hexdigest()
-                title = record['title'].lower()
-                blocked = any(x in title for x in ['just a moment', 'access denied', 'captcha', 'privacy error'])
-                if record['tls_frames'] < 5 or record['body_chars'] < 50 or blocked or not record['final_url'].startswith('https://'):
-                    record['status'] = 'needs_review'
-                else:
-                    record['status'] = 'candidate'
+                record['review_reasons'] = review_reasons(record)
+                record['status'] = 'needs_review' if record['review_reasons'] else 'candidate'
                 driver.save_screenshot(str(folder / (visit_id + '.png')))
             except Exception as error:
                 record['status'] = 'failed'

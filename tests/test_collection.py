@@ -5,7 +5,7 @@ import threading
 import unittest
 from unittest.mock import patch
 
-from peekaboo.collect import sites_from, Proxy
+from peekaboo.collect import sites_from, Proxy, review_reasons
 
 
 class ManifestValidation(unittest.TestCase):
@@ -28,6 +28,24 @@ class ManifestValidation(unittest.TestCase):
 
     def test_https_manifest_accepted(self):
         self.assertEqual(self.check_rows([['x', 'https://example.org']])[0]['site_id'], 'x')
+
+
+class QualityChecks(unittest.TestCase):
+    def record(self, code=200):
+        return dict(navigation={'responseStatus': code}, tls_frames=50,
+                    body_chars=500, final_url='https://example.org/', title='Example')
+
+    def test_browser_navigation_failure_rejected_despite_tls(self):
+        self.assertIn('missing_or_unsuccessful_http_response', review_reasons(self.record(0)))
+
+    def test_http_error_rejected(self):
+        self.assertIn('missing_or_unsuccessful_http_response', review_reasons(self.record(503)))
+
+    def test_browser_error_dom_rejected(self):
+        self.assertIn('browser_error_page', review_reasons(dict(self.record(), browser_error_page=True)))
+
+    def test_good_visit_is_candidate(self):
+        self.assertEqual(review_reasons(self.record()), [])
 
 
 class TunnelTests(unittest.TestCase):
