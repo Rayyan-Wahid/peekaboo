@@ -1,5 +1,5 @@
 param([int]$Visits = 2, [int]$Seconds = 20, [int]$Limit = 3,
-      [string]$Sites = 'configs/sites.csv')
+      [string]$Sites = 'configs/sites.csv', [int]$Seed = 42)
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Push-Location $repoRoot
@@ -12,7 +12,7 @@ try {
     $env:SE_CACHE_PATH = Join-Path $repoRoot '.cache/selenium'
     $env:SE_AVOID_STATS = 'true'
     & $pythonPath -m peekaboo doctor
-    & $pythonPath -m peekaboo collect --sites $Sites --limit $Limit --visits $Visits --seconds $Seconds --pause 10
+    & $pythonPath -m peekaboo collect --sites $Sites --limit $Limit --visits $Visits --seconds $Seconds --pause 10 --seed $Seed
     $collectionExit = $LASTEXITCODE
     if ($collectionExit -ne 0) {
         Write-Warning 'Some visits failed or need review. Saved captures are retained; inspect the latest session manifest and logs.'
