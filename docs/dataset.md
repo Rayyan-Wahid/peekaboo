@@ -1,5 +1,17 @@
 # Dataset collection
 
+## Screening decisions
+
+GNU was removed from the active site list after three observed visits produced
+Chrome `ERR_EMPTY_RESPONSE` pages with navigation response status 0. Its historical
+captures and labels remain unchanged and excluded. Rust is the replacement
+candidate and must pass the same browser/capture screening before full collection.
+National Geographic passed two repeat visits after an initial navigation failure.
+Archive's initial empty-text flag was a false alarm; the collector now includes
+open shadow-root text. One repeat screenshot showed only the upper page rendered,
+so retain that observation as partial rendering within the fixed window, not proof
+of complete loading. Candidate status does not replace screenshot review.
+
 ## Windows pilot launcher
 
 From a normal PowerShell window in the repository, run:
