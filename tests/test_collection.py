@@ -49,6 +49,23 @@ class QualityChecks(unittest.TestCase):
 
 
 class TunnelTests(unittest.TestCase):
+    def test_upstream_failure_is_logged(self):
+        proxy = Proxy()
+        threading.Thread(target=proxy.serve_forever, daemon=True).start()
+        client = socket.create_connection(proxy.server_address, timeout=3)
+        try:
+            with patch('peekaboo.collect.socket.create_connection', side_effect=TimeoutError('test timeout')):
+                client.sendall(b'CONNECT example.org:443 HTTP/1.1\r\n\r\n')
+                self.assertEqual(client.recv(4096), b'')
+                event = proxy.events.get_nowait()
+                self.assertEqual(event['phase'], 'upstream_connect')
+                self.assertEqual(event['type'], 'TimeoutError')
+        finally:
+            client.close()
+            proxy.stopping.set()
+            proxy.shutdown()
+            proxy.server_close()
+
     def test_connect_forwards_bytes_unchanged(self):
         proxy = Proxy()
         threading.Thread(target=proxy.serve_forever, daemon=True).start()

@@ -6,6 +6,7 @@ import csv
 import hashlib
 import json
 import random
+import queue
 import select
 import shutil
 import socket
@@ -28,6 +29,7 @@ def executable(name):
 class Tunnel(socketserver.BaseRequestHandler):
     def handle(self):
         upstream = None
+        phase = 'connect_request'
         try:
             self.request.settimeout(15)
             header = b''
@@ -44,7 +46,9 @@ class Tunnel(socketserver.BaseRequestHandler):
             host, port = authority.rsplit(':', 1)
             if port != '443':
                 return
+            phase = 'upstream_connect'
             upstream = socket.create_connection((host.strip('[]'), int(port)), timeout=15)
+            phase = 'relay'
             self.request.sendall(b'HTTP/1.1 200 Connection Established\r\n\r\n')
             if rest:
                 upstream.sendall(rest)
@@ -59,8 +63,11 @@ class Tunnel(socketserver.BaseRequestHandler):
                     if not data:
                         return
                     (upstream if source is self.request else self.request).sendall(data)
-        except (OSError, ValueError):
-            pass
+        except (OSError, ValueError) as error:
+            self.server.events.put({'phase': phase, 'type': type(error).__name__,
+                                    'errno': getattr(error, 'errno', None),
+                                    'message': str(error)[:300],
+                                    'utc': datetime.now(timezone.utc).isoformat()})
         finally:
             if upstream:
                 upstream.close()
@@ -72,6 +79,7 @@ class Proxy(socketserver.ThreadingTCPServer):
 
     def __init__(self):
         self.stopping = threading.Event()
+        self.events = queue.SimpleQueue()
         super().__init__(('127.0.0.1', 0), Tunnel)
 
 
@@ -128,6 +136,7 @@ def collect(args):
     order = [(site, repeat) for repeat in range(args.visits) for site in sites]
     random.Random(args.seed).shuffle(order)
     config = dict(vars(args), session_id=session, scope='loopback CONNECT proxy, TCP only',
+                  collector_revision='proxy-diagnostics-v1',
                   cache_policy='fresh browser profile per visit', sites=sites,
                   dumpcap_version=subprocess.check_output([dumpcap, '--version'], text=True).splitlines()[0])
     (folder / 'session.json').write_text(json.dumps(config, indent=2), encoding='utf-8')
@@ -213,6 +222,10 @@ def collect(args):
                 fatal_startup = isinstance(error, (SessionNotCreatedException, NoSuchDriverException))
                 record['error'] = f'{type(error).__name__}: {error}'[:2000]
             finally:
+                # Snapshot errors before normal browser teardown, which can reset sockets.
+                record['proxy_errors'] = []
+                while not proxy.events.empty():
+                    record['proxy_errors'].append(proxy.events.get())
                 if process and process.poll() is None:
                     try:
                         process.terminate()
