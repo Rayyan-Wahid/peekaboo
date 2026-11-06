@@ -1,4 +1,4 @@
-# Proposed architecture
+# Architecture
 
 1. **Collection:** Selenium visits the site manifest; tshark records one trace per
    visit. Record site ID, session ID, browser settings, condition, and success.
@@ -12,4 +12,9 @@
 5. **Presentation:** Streamlit dashboard for fresh-visit predictions and comparison
    of baseline and defended results. This component is not implemented yet.
 
-The current implementation contains only a CLI and environment diagnostics.
+The collector, metadata extractor, date-based Random Forest experiment, bounded
+jitter simulation, adaptive comparison, CLI prediction, and local results/replay
+dashboard are implemented. See [analysis details](analysis.md) for the exact feature
+definition, reproducibility commands, and limitations. The dashboard currently
+replays saved traces; fresh controlled visits use the collector and prediction CLI.
+Live network shaping has not been implemented or evaluated.

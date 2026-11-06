@@ -7,12 +7,25 @@ directions, and timing, then evaluate a timing-jitter defense.
 
 ## Current status
 
-The CLI environment check and a controlled HTTPS collection pipeline are implemented.
-The local pilot has not yet produced validated traces: Chrome startup from the agent
-session encountered Windows access restrictions. Run the pilot from normal PowerShell
-using `./scripts/collect-pilot.ps1`. See [dataset collection](docs/dataset.md) for the
-proxy observation scope and acceptance checks. Feature extraction, training, jitter,
-and the dashboard are not implemented yet. No accuracy claims are available.
+Collection is complete: 803 accepted captures across 20 sites. The project now
+implements metadata extraction, fixed date splits, a Random Forest baseline,
+bounded timing-jitter simulation, adaptive-classifier comparison, and a local
+Streamlit results/replay dashboard. See [analysis and run instructions](docs/analysis.md).
+Results are generated locally; no accuracy or privacy level is assumed in advance.
+
+On this Windows workspace, all new tooling, caches, and outputs stay on D:.
+From `D:\Peekaboo\peekaboo`, run:
+
+```powershell
+.\scripts\setup-analysis.ps1
+.\scripts\run-analysis.ps1 -Stage all -RunName experiment-v1
+.\scripts\start-dashboard.ps1
+```
+
+The existing `.venv` remains the collection environment. `.venv-research` holds
+the analysis dependencies. Keep raw data out of Git; source code and experiment
+configuration are versioned separately. Existing run names cannot be overwritten;
+use a new name for an intentional repeat and preserve earlier results.
 
 ## Setup
 
@@ -37,10 +50,10 @@ When implementing the research pipeline, install its optional dependencies:
 python -m pip install -e ".[research]"
 ```
 
-Traffic capture will require tshark and a supported browser/driver. Live jitter
-will use Linux traffic control; Windows can be used for development and offline
-analysis. Configuration files are initial experiment plans, not active pipeline
-controls yet.
+Traffic capture requires tshark and a supported browser/driver. Live jitter would
+use Linux traffic control; the implemented defense is an explicitly labeled offline
+simulation. `configs/analysis.toml` controls the analysis pipeline;
+`configs/experiment.toml` contains the older collection plan.
 
 ## Research scope
 

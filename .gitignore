@@ -1,4 +1,5 @@
 .venv/
+.venv-research/
 .cache/
 __pycache__/
 *.py[cod]
@@ -11,6 +12,7 @@ dist/
 .env.*
 !.env.example
 data/raw/*
+data/demo/
 data/processed/*
 models/*
 reports/*
@@ -19,3 +21,9 @@ reports/*
 *.pcapng
 *.joblib
 ~$*
+output/
+tmp/
+data/catalog/
+data/archive-index.json
+AGENTS.md
+docs/PARTNER_TASK.md

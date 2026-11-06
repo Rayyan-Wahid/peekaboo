@@ -11,7 +11,8 @@ requires-python = ">=3.11"
 dependencies = []
 
 [project.optional-dependencies]
-research = ["selenium>=4,<5", "numpy>=1.26,<3", "pandas>=2,<3", "scikit-learn>=1.4,<2", "streamlit>=1.35,<2"]
+analysis = ["numpy>=1.26,<3", "pandas>=2,<3", "scikit-learn>=1.4,<2", "joblib>=1.4,<2", "streamlit>=1.66,<2"]
+research = ["selenium>=4,<5", "numpy>=1.26,<3", "pandas>=2,<3", "scikit-learn>=1.4,<2", "joblib>=1.4,<2", "streamlit>=1.66,<2"]
 
 [project.scripts]
 peekaboo = "peekaboo.cli:main"
